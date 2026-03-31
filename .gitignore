@@ -1,0 +1,73 @@
+# =========================
+# 🔹 Python Basics
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# 🔹 Virtual Environments
+# =========================
+venv/
+env/
+ENV/
+.venv/
+
+# =========================
+# 🔹 Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# 🔹 Data Files (IMPORTANT)
+# =========================
+data/
+datasets/
+*.csv
+*.xlsx
+*.json
+*.parquet
+
+# =========================
+# 🔹 Model Files
+# =========================
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# =========================
+# 🔹 Logs & Outputs
+# =========================
+logs/
+*.log
+output/
+results/
+
+# =========================
+# 🔹 Environment Variables (SECRETS)
+# =========================
+.env
+.env.*
+
+# =========================
+# 🔹 IDE / Editor Files
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# 🔹 OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# 🔹 Build / Cache
+# =========================
+dist/
+build/
+*.egg-info/
+.cache/
