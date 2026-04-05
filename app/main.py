@@ -1,8 +1,10 @@
 from fastapi import FastAPI
-from app.routes import upload, analysis
+from upload import router
 
 app = FastAPI()
 
-app.include_router(upload.router)
-app.include_router(analysis.router)
+@app.get("/")
+def home():
+    return {"message": "API is running 🚀"}
 
+app.include_router(router)
