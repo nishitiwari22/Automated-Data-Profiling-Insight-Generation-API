@@ -5,7 +5,7 @@ router = APIRouter()
 
 UPLOAD_PATH = "data/uploaded.csv"
 
-@router.post("https://automated-data-profiling-insight.onrender.com/upload")
+@router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     os.makedirs("data", exist_ok=True)
 
