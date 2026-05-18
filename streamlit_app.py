@@ -1,95 +1,167 @@
 import streamlit as st
-import requests
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # -----------------------------
-# CONFIG
+# PAGE CONFIG
 # -----------------------------
-API_BASE_URL = "http://127.0.0.1:8000"  # change when deployed
-
-st.set_page_config(page_title="Data Insights Dashboard", layout="wide")
+st.set_page_config(
+    page_title="Data Insights Dashboard",
+    layout="wide"
+)
 
 st.title("📊 Automated Data Insights Dashboard")
-st.write("Upload your dataset and get instant analysis powered by FastAPI 🚀")
+st.write("Upload your dataset and get instant automated analysis 🚀")
 
 # -----------------------------
 # FILE UPLOAD
 # -----------------------------
-uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+uploaded_file = st.file_uploader(
+    "Upload CSV File",
+    type=["csv"],
+    key="main_csv_upload"
+)
 
+# -----------------------------
+# PROCESS FILE
+# -----------------------------
 if uploaded_file is not None:
+
+    # Read CSV
+    df = pd.read_csv(uploaded_file)
+
     st.success("File uploaded successfully!")
 
-    # Preview dataset
-    df = pd.read_csv(uploaded_file)
+    # -----------------------------
+    # DATA PREVIEW
+    # -----------------------------
     st.subheader("🔍 Data Preview")
     st.dataframe(df.head())
 
     # -----------------------------
-    # UPLOAD TO FASTAPI
+    # BASIC INFO
     # -----------------------------
-    if st.button("🚀 Run Analysis"):
-        with st.spinner("Processing..."):
+    st.subheader("📌 Dataset Information")
 
-            files = {"file": uploaded_file.getvalue()}
+    col1, col2 = st.columns(2)
 
-            try:
-                response = requests.post(f"{API_BASE_URL}/upload", files=files)
+    with col1:
+        st.metric("Rows", df.shape[0])
 
-                if response.status_code == 200:
-                    st.success("Data uploaded successfully!")
+    with col2:
+        st.metric("Columns", df.shape[1])
 
-                    # -----------------------------
-                    # GET ANALYSIS
-                    # -----------------------------
-                    analysis_res = requests.get(f"{API_BASE_URL}/analysis")
+    # -----------------------------
+    # DATA TYPES
+    # -----------------------------
+    st.subheader("🧠 Data Types")
+    st.dataframe(df.dtypes.astype(str))
 
-                    if analysis_res.status_code == 200:
-                        data = analysis_res.json()
+    # -----------------------------
+    # MISSING VALUES
+    # -----------------------------
+    st.subheader("❌ Missing Values")
+    missing = df.isnull().sum()
+    missing = missing[missing > 0]
 
-                        st.subheader("📈 Statistical Summary")
-                        st.json(data.get("summary", {}))
+    if len(missing) > 0:
+        st.dataframe(missing)
+    else:
+        st.success("No missing values found!")
 
-                        st.subheader("🔗 Correlation Matrix")
-                        st.json(data.get("correlation", {}))
+    # -----------------------------
+    # STATISTICAL SUMMARY
+    # -----------------------------
+    st.subheader("📈 Statistical Summary")
 
-                    else:
-                        st.error("Error fetching analysis")
+    numeric_df = df.select_dtypes(include=['number'])
 
-                    # -----------------------------
-                    # VISUALIZATION
-                    # -----------------------------
-                    viz_res = requests.get(f"{API_BASE_URL}/visualization")
+    if not numeric_df.empty:
+        st.dataframe(numeric_df.describe())
+    else:
+        st.warning("No numeric columns found.")
 
-                    if viz_res.status_code == 200:
-                        st.subheader("📊 Visualizations")
-                        st.image(viz_res.content)
+    # -----------------------------
+    # CORRELATION MATRIX
+    # -----------------------------
+    st.subheader("🔗 Correlation Matrix")
 
-                    else:
-                        st.warning("Visualization not available")
+    if numeric_df.shape[1] > 1:
 
-                else:
-                    st.error("Upload failed")
+        correlation = numeric_df.corr()
 
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+        st.dataframe(correlation)
+
+        # Heatmap
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        cax = ax.matshow(correlation)
+
+        plt.xticks(range(len(correlation.columns)),
+                   correlation.columns,
+                   rotation=90)
+
+        plt.yticks(range(len(correlation.columns)),
+                   correlation.columns)
+
+        fig.colorbar(cax)
+
+        st.pyplot(fig)
+
+    else:
+        st.warning("Not enough numeric columns for correlation.")
+
+    # -----------------------------
+    # COLUMN-WISE ANALYSIS
+    # -----------------------------
+    st.subheader("📊 Column Analysis")
+
+    selected_column = st.selectbox(
+        "Select Column",
+        df.columns
+    )
+
+    st.write(df[selected_column].value_counts().head(10))
+
+    # -----------------------------
+    # VISUALIZATION
+    # -----------------------------
+    st.subheader("📉 Visualization")
+
+    if selected_column in numeric_df.columns:
+
+        fig2, ax2 = plt.subplots()
+
+        ax2.hist(df[selected_column].dropna(), bins=20)
+
+        ax2.set_title(f"Distribution of {selected_column}")
+
+        st.pyplot(fig2)
+
+    else:
+
+        value_counts = df[selected_column].value_counts().head(10)
+
+        st.bar_chart(value_counts)
 
 # -----------------------------
-# SIDEBAR (EXTRA POLISH)
+# SIDEBAR
 # -----------------------------
 st.sidebar.title("⚙️ About Project")
 
 st.sidebar.info("""
-**Data Insights API**
+### Features
 
-🔹 Upload dataset  
-🔹 Automated cleaning  
-🔹 Statistical insights  
-🔹 Correlation analysis  
-🔹 Visual outputs  
+✅ CSV Upload  
+✅ Automated Data Analysis  
+✅ Missing Value Detection  
+✅ Statistical Summary  
+✅ Correlation Analysis  
+✅ Interactive Charts  
 
-Built using:
-- FastAPI ⚡
-- Pandas 🐼
+### Built Using
+
 - Streamlit 🎯
+- Pandas 🐼
+- Matplotlib 📊
 """)
